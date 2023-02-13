@@ -1,0 +1,146 @@
+# Macro for Unity YAML-based asset files.
+[attr]unityyaml -text merge=unityyamlmerge diff
+
+# Macro for all binary files that should use Git LFS.
+[attr]lfs -text filter=lfs diff=lfs merge=lfs
+
+# Default to crlf line endings.
+* text=crlf
+
+# Code
+*.cs diff=csharp text eol=crlf
+*.cginc text eol=crlf
+*.shader text eol=crlf
+
+# Unity Text Assets
+*.meta unityyaml linguist-generated
+*.unity unityyaml linguist-generated
+*.asset unityyaml linguist-generated
+*.prefab unityyaml linguist-generated
+*.mat unityyaml linguist-generated
+*.anim unityyaml linguist-generated
+*.controller unityyaml linguist-generated
+*.overrideController unityyaml linguist-generated
+*.physicMaterial unityyaml linguist-generated
+*.physicsMaterial2D unityyaml linguist-generated
+*.playable unityyaml linguist-generated
+*.mask unityyaml linguist-generated
+*.brush unityyaml linguist-generated
+*.flare unityyaml linguist-generated
+*.fontsettings unityyaml linguist-generated
+*.guiskin unityyaml linguist-generated
+*.giparams unityyaml linguist-generated
+*.renderTexture unityyaml linguist-generated
+*.spriteatlas unityyaml linguist-generated
+*.terrainlayer unityyaml linguist-generated
+*.mixer unityyaml linguist-generated
+*.shadervariants unityyaml linguist-generated
+*.preset unityyaml linguist-generated
+*.asmdef -text diff
+
+# Unity Binary Assets
+*.cubemap lfs
+*.unitypackage lfs
+# Note: Unity terrain assets must have "-Terrain" suffix.
+*-[Tt]errain.asset -unityyaml lfs
+# Note: Unity navmesh assets must have "-NavMesh" suffix.
+*-[Nn]av[Mm]esh.asset -unityyaml lfs
+# Note: Unity lighting assets must have "-NavMesh" suffix.
+*-[Ll]ighting[Dd]ata.asset -unityyaml lfs
+
+#3D Object
+*.3[dD][mM] lfs
+*.3[dD][sS] lfs
+*.[aA][bB][cC] lfs
+*.[bB][lL][eE][nN][dD] lfs
+*.[cC]4[dD] lfs
+*.[cC][oO][lL][lL][aA][dD][aA] lfs
+*.[dD][aA][eE] lfs
+*.[dD][xX][fF] lfs
+*.[fF][bB][xX] lfs
+*.[jJ][aA][sS] lfs
+*.[lL][wW][oO] lfs
+*.[lL][wW][oO]2 lfs
+*.[lL][wW][sS] lfs
+*.[lL][xX][oO] lfs
+*.[mM][aA] lfs
+*.[mM][aA][xX] lfs
+*.[mM][bB] lfs
+*.[oO][bB][jJ] lfs
+*.[pP][lL][yY] lfs
+*.[sS][kK][pP] lfs
+*.[sS][tT][lL] lfs
+*.[zZ][tT][lL] lfs
+
+#Audio
+*.[aA][iI][fF] lfs
+*.[aA][iI][fF][fF] lfs
+*.[bB][aA][nN][kK] lfs
+*.[iI][tT] lfs
+*.[mM][oO][dD] lfs
+*.[mM][pP]3 lfs
+*.[oO][gG][gG] lfs
+*.[sS]3[mM] lfs
+*.[wW][aA][vV] lfs
+*.[xX][mM] lfs
+
+# Fonts
+*.[oO][tT][fF] lfs
+*.[tT][tT][fF] lfs
+
+# Image
+*.[aA][fF][pP][hH][oO][tT][oO] lfs
+*.[aA][fF][dD][eE][sS][iI][gG][nN] lfs
+*.[aA][iI] lfs 
+*.[aA][pP][nN][gG] lfs
+*.[aA][tT][sS][cC] lfs
+*.[bB][mM][pP] lfs
+*.[cC][lL][iI][pP] lfs
+*.[dD][dD][sS] lfs
+*.[eE][xX][rR] lfs
+*.[gG][iI][fF] lfs
+*.[hH][dD][rR] lfs
+*.[iI][fF][fF] lfs
+*.[jJ][pP][gG] lfs
+*.[jJ][pP][eE][gG] lfs
+*.[kK][rR][aA] lfs
+*.[kK][pP][pP] lfs
+*.[lL][eE][oO] lfs
+*.[pP][iI][cC][tT] lfs
+*.[pP][nN][gG] lfs
+*.[pP][sS][dD] lfs
+*.[sS][vV][gG] lfs
+*.[sS][vV][gG][zZ] lfs
+*.[tT][gG][aA] lfs
+*.[tT][iI][fF] lfs
+*.[tT][iI][fF][fF] lfs
+*.[wW][eE][bB][mM] lfs
+*.[wW][eE][bB][pP] lfs
+*.[xX][cC][fF] lfs
+
+# Packaging
+*.7[zZ] lfs
+*.[bB][zZ]2 lfs
+*.[gG][zZ] lfs
+*.[rR][aA][rR] lfs
+*.[tT][aA][rR] lfs
+*.[tT][aA][rR].[gG][zZ] lfs
+*.[zZ][iI][pP] lfs
+*.[nN][uU][pP][kK][gG] lfs
+
+#Video
+*.[aA][vV][iI] lfs
+*.[mM][kK][vV] lfs
+*.[mM][oO][vV] lfs
+*.[mM][pP]4 lfs
+
+# Object/Executable Code
+*.[aA] lfs
+*.[dD][lL][lL] lfs
+*.[sS][oO] lfs
+*.[dD][yY][lL][iI][bB] lfs
+*.[eE][xX][eE] lfs
+
+# Misc
+*.[pP][dD][fF] lfs
+*.[zZ][iI][pP] lfs
