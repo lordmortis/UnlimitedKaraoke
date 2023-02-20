@@ -112,6 +112,7 @@ namespace UnlimitedKaraoke.Runtime.Audio
                 output.SamplingRate = systemRate;
                 output.SpeakerMode = speakerMode;
                 output.SpeakerModeChannels = speakerModeChannels;
+                output.DeviceGuid = guid;
                 outputs.Add(output);
             }
             
