@@ -19,7 +19,7 @@ namespace UnlimitedKaraoke.Runtime.UI.Config
         {
             FileBrowser.ShowLoadDialog(
                 DialogSuccess, DialogCancel, 
-                FileBrowser.PickMode.Folders, false);
+                FileBrowser.PickMode.Folders);
         }
 
         private void DialogCancel()

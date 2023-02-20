@@ -78,3 +78,7 @@ Assets/Plugins/Sirenix/Demos/Sample - RPG Editor.unitypackage.meta
 # If the source bank files are kept outside of the StreamingAssets folder then these can be ignored.
 # Log files can be ignored.
 fmod_editor.log
+
+# Eflatun.SceneReference auto-generated map file
+**/[Aa]ssets/Resources/Eflatun/SceneReference/SceneGuidToPathMap.generated.json
+**/[Aa]ssets/Resources/Eflatun/SceneReference/SceneGuidToPathMap.generated.json.meta
