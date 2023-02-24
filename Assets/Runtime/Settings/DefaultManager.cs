@@ -36,6 +36,17 @@ namespace UnlimitedKaraoke.Runtime.Settings
             }
         }
 
+        public string MoisesKey
+        {
+            get => currentConfig?.MoisesKey;
+            set
+            {
+                currentConfig ??= new DefaultConfig();
+                currentConfig.MoisesKey = value;
+                OnSettingsUpdated?.Invoke(this);
+            }
+        }
+
         private readonly string preferencesPath;
         private DefaultConfig currentConfig = new();
         private readonly JsonSerializer serializer;
@@ -50,6 +61,9 @@ namespace UnlimitedKaraoke.Runtime.Settings
             {
                 TypeNameHandling = TypeNameHandling.Auto,
             };
+#if UNITY_EDITOR
+            Debug.Log($"Save path is: {preferencesPath}");
+#endif
         }
         
         public void Save()

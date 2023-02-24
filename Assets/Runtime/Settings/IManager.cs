@@ -7,6 +7,7 @@ namespace UnlimitedKaraoke.Runtime.Settings
         event System.Action<IManager> OnSettingsUpdated;
         IAudioOutput AudioOutput { get; set; }
         string DataDirectory { get; set; }
+        string MoisesKey { get; set; }
 
         bool Load();
         void Save();

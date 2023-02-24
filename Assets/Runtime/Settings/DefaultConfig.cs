@@ -6,5 +6,6 @@ namespace UnlimitedKaraoke.Runtime.Settings
     {
         public IAudioOutput AudioOutput { get; set; }
         public string DataDirectory { get; set; }
+        public string MoisesKey { get; set; }
     }
 }
