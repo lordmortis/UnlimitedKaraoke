@@ -64,6 +64,14 @@ namespace UnlimitedKaraoke.Runtime.Settings
 #if UNITY_EDITOR
             Debug.Log($"Save path is: {preferencesPath}");
 #endif
+            try
+            {
+                Load();
+            }
+            catch (FileNotFoundException)
+            {
+                Debug.LogError("No preferences file");
+            }
         }
         
         public void Save()

@@ -1,12 +1,13 @@
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
+using Zenject;
 
 
 namespace UnlimitedKaraoke.Runtime.Tracks
 {
     // ReSharper disable once ClassNeverInstantiated.Global - instantiated via Zenject
-    public class DefaultManager : IManager
+    public class DefaultManager : IManager, ITickable
     {
         private const string TrackDataFile = "trackinfo.json";
         
@@ -17,6 +18,7 @@ namespace UnlimitedKaraoke.Runtime.Tracks
         private string currentDataPath = null;
         private readonly List<DefaultTrack> tracks = new(); 
         private readonly JsonSerializer serializer;
+        private bool listUpdated;
 
         public DefaultManager(Settings.IManager settings)
         {
@@ -30,6 +32,15 @@ namespace UnlimitedKaraoke.Runtime.Tracks
             SettingsUpdated(settings);
         }
 
+        public void Tick()
+        {
+            if (!listUpdated) return;
+
+            OnTracksUpdated?.Invoke(Tracks);
+            listUpdated = false;
+        }        
+        
+
         private void SettingsUpdated(Settings.IManager settings)
         {
             if (currentDataPath == settings.DataDirectory) return;
@@ -40,7 +51,7 @@ namespace UnlimitedKaraoke.Runtime.Tracks
                 UnityEngine.Debug.Log($"Checking {directory}");
 #endif
                 var trackPath = Path.Join(directory, TrackDataFile);
-                if (!File.Exists(currentDataPath)) continue;
+                if (!File.Exists(trackPath)) continue;
 
                 DefaultTrack trackData;
 
@@ -54,7 +65,7 @@ namespace UnlimitedKaraoke.Runtime.Tracks
                 tracks.Add(trackData);
             }
             currentDataPath = settings.DataDirectory;
-            OnTracksUpdated?.Invoke(Tracks);
+            listUpdated = true;
         }
 
         public ITrack AddTrack(string sourcePath) => AddTrack(sourcePath, "New Track");
@@ -82,6 +93,7 @@ namespace UnlimitedKaraoke.Runtime.Tracks
 
             Update(trackData);
             tracks.Add(trackData);
+            listUpdated = true;
             return trackData;
         }
 
@@ -91,6 +103,8 @@ namespace UnlimitedKaraoke.Runtime.Tracks
             string dirPath = Path.Join(currentDataPath, realTrack.Id.ToString());
             if (!Directory.Exists(dirPath)) return;
             Directory.Delete(dirPath, true);
+            tracks.Remove(realTrack);
+            listUpdated = true;
         }
 
         public ITrack RenameTrack(ITrack track, string newName)
@@ -98,6 +112,7 @@ namespace UnlimitedKaraoke.Runtime.Tracks
             if (track is not DefaultTrack realTrack) return null;
             realTrack.Name = newName;
             Update(realTrack);
+            listUpdated = true;
             return realTrack;
         }
 
@@ -113,7 +128,7 @@ namespace UnlimitedKaraoke.Runtime.Tracks
             using var jsonStream = new JsonTextWriter(rawStream);
             serializer.Serialize(jsonStream, trackData);
 
-            var dataPath = Path.Join(dirPath, TrackDataFile);
+            string dataPath = Path.Join(dirPath, TrackDataFile);
             File.Delete(dataPath);
             File.Move(tempPath, dataPath);
         }

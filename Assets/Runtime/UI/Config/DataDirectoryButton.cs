@@ -14,7 +14,6 @@ namespace UnlimitedKaraoke.Runtime.UI.Config
             this.settings = settings;
         }
 
-
         public void OnPointerClick(PointerEventData eventData)
         {
             FileBrowser.ShowLoadDialog(
