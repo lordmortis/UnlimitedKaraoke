@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using FMOD;
 using UnityEngine;
+using UnlimitedKaraoke.Runtime.Tracks;
 using Zenject;
 using Debug = UnityEngine.Debug;
 
@@ -20,6 +22,8 @@ namespace UnlimitedKaraoke.Runtime.Audio
         private FMOD.System currentSystem;
         private bool systemInitialized;
 
+        private List<ChannelGroup> playingSounds = new();
+        
         public FModAudioSystem()
         {
             Outputs = outputs.AsReadOnly();
@@ -147,7 +151,20 @@ namespace UnlimitedKaraoke.Runtime.Audio
             }
         }
 
-        public void StartLoadingFile(string filename, int channelIndex)
+        public void Play(string baseDirectory, ITrack track)
+        {
+            foreach (var sound in playingSounds)
+            {
+                sound.stop();
+                sound.release();
+            }
+            playingSounds.Clear();
+            
+            StartPlayingFile(Path.Join(baseDirectory, track.MusicPath), 0);
+            StartPlayingFile(Path.Join(baseDirectory, track.VocalPath), 2);
+        }
+
+        private void StartPlayingFile(string filename, int channelIndex)
         {
             var result = currentSystem.createSound(filename, MODE.CREATESTREAM, out var sound);
             if (result != RESULT.OK)
@@ -169,7 +186,7 @@ namespace UnlimitedKaraoke.Runtime.Audio
                 Debug.LogError($"playing sound failed! {result}");
                 return;
             }
-            
+
             result = channel.getDSP(FMOD.CHANNELCONTROL_DSP_INDEX.HEAD, out var dspHead);
             if (result != RESULT.OK)
             {
@@ -207,15 +224,11 @@ namespace UnlimitedKaraoke.Runtime.Audio
             {
                 Debug.LogError($"could not set mix matrix! {result}");
                 return;
-            }   
+            }
             
+            playingSounds.Add(masterChannelGroup);
         }
-
-        public void Play()
-        {
-            throw new System.NotImplementedException();
-        }
-
+        
         public void Pause()
         {
             throw new System.NotImplementedException();

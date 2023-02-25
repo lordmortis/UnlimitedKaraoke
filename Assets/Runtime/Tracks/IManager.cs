@@ -14,5 +14,7 @@ namespace UnlimitedKaraoke.Runtime.Tracks
         public void DeleteTrack(ITrack track);
 
         public ITrack RenameTrack(ITrack track, string newName);
+
+        public string TrackDirectory(ITrack track);
     }
 }

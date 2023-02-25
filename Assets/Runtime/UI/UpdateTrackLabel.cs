@@ -16,12 +16,12 @@ namespace UnlimitedKaraoke.Runtime.UI
         [SerializeField] private Type labelType;
 
         private TMPro.TMP_Text label;
-        private Tracks.IManager trackManager;
+        private Runtime.Tracks.IManager trackManager;
         private int lastCount;
         private Moises.IManager moises;
 
         [Zenject.Inject]
-        public void InjectDependencies(Tracks.IManager trackManager, Moises.IManager moises)
+        public void InjectDependencies(Runtime.Tracks.IManager trackManager, Moises.IManager moises)
         {
             this.trackManager = trackManager;
             this.moises = moises;

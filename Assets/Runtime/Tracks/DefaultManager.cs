@@ -174,15 +174,17 @@ namespace UnlimitedKaraoke.Runtime.Tracks
                 
                 trackData.State = TrackState.Ready;
                 trackData.MoisesJob = null;
+                listUpdated = true;
             }
 
             Update(trackData);
             if (job.State == Moises.JobState.Complete) moises.RemoveJob(job).Forget();
         }
 
-        private string TrackDirectory(DefaultTrack trackData)
+        public string TrackDirectory(ITrack trackData)
         {
-            return Path.Join(currentDataPath, trackData.Id.ToString());
+            if (trackData is not DefaultTrack realTrack) return null;
+            return Path.Join(currentDataPath, realTrack.Id.ToString());
         }
         
     }

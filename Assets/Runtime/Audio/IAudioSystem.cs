@@ -10,9 +10,7 @@ namespace UnlimitedKaraoke.Runtime.Audio
 
         void SetOutput(IAudioOutput output);
         
-        void StartLoadingFile(string filename, int channel);
-
-        void Play();
+        void Play(string rootDirectory, Tracks.ITrack track);
 
         void Pause();
     }
