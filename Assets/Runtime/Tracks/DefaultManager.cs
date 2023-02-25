@@ -19,8 +19,9 @@ namespace UnlimitedKaraoke.Runtime.Tracks
         private readonly List<DefaultTrack> tracks = new(); 
         private readonly JsonSerializer serializer;
         private bool listUpdated;
+        private readonly Moises.IManager moises;
 
-        public DefaultManager(Settings.IManager settings)
+        public DefaultManager(Settings.IManager settings, Moises.IManager moises)
         {
             serializer = new JsonSerializer
             {
@@ -30,17 +31,17 @@ namespace UnlimitedKaraoke.Runtime.Tracks
             Tracks = tracks.AsReadOnly();
             settings.OnSettingsUpdated += SettingsUpdated;
             SettingsUpdated(settings);
+            this.moises = moises;
         }
 
         public void Tick()
         {
             if (!listUpdated) return;
-
             OnTracksUpdated?.Invoke(Tracks);
+            foreach (var track in tracks) track.MoisesJob ??= moises.AddTrack(track);
             listUpdated = false;
         }        
         
-
         private void SettingsUpdated(Settings.IManager settings)
         {
             if (currentDataPath == settings.DataDirectory) return;

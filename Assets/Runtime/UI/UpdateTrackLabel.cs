@@ -18,11 +18,13 @@ namespace UnlimitedKaraoke.Runtime.UI
         private TMPro.TMP_Text label;
         private Tracks.IManager trackManager;
         private int lastCount;
-        
+        private Moises.IManager moises;
+
         [Zenject.Inject]
-        public void InjectDependencies(Tracks.IManager trackManager)
+        public void InjectDependencies(Tracks.IManager trackManager, Moises.IManager moises)
         {
             this.trackManager = trackManager;
+            this.moises = moises;
         }
 
         public void Awake()
@@ -35,11 +37,12 @@ namespace UnlimitedKaraoke.Runtime.UI
             switch (labelType)
             {
                 case Type.ProcessingTracks:
-                    Debug.Log("Track processing not done");
+                    moises.OnJobsUpdate += OnCountUpdated;
+                    OnCountUpdated(moises.Jobs);
                     break;
                 case Type.TotalTracks:
-                    trackManager.OnTracksUpdated += OnTracksUpdated;
-                    OnTracksUpdated(trackManager.Tracks);
+                    trackManager.OnTracksUpdated += OnCountUpdated;
+                    OnCountUpdated(trackManager.Tracks);
                     break;
             }
         }
@@ -49,15 +52,15 @@ namespace UnlimitedKaraoke.Runtime.UI
             switch (labelType)
             {
                 case Type.ProcessingTracks:
-                    Debug.Log("Track processing not done");
+                    moises.OnJobsUpdate -= OnCountUpdated;
                     break;
                 case Type.TotalTracks:
-                    trackManager.OnTracksUpdated -= OnTracksUpdated;
+                    trackManager.OnTracksUpdated -= OnCountUpdated;
                     break;
             }
         }
         
-        private void OnTracksUpdated(IReadOnlyList<Tracks.ITrack> tracks)
+        private void OnCountUpdated<T>(IReadOnlyList<T> tracks) 
         {
             if (tracks.Count == lastCount) return;
             lastCount = tracks.Count;
