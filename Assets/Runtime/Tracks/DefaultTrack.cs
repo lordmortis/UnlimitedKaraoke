@@ -1,3 +1,5 @@
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using UnlimitedKaraoke.Runtime.Moises;
 
 namespace UnlimitedKaraoke.Runtime.Tracks
@@ -8,6 +10,7 @@ namespace UnlimitedKaraoke.Runtime.Tracks
 
         public IJob MoisesJob { get; set;  }
         
+        [JsonConverter(typeof(StringEnumConverter))]
         public TrackState State { get; set; }
         public string Name { get; set; }
 

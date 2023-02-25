@@ -9,6 +9,7 @@ namespace UnlimitedKaraoke.Runtime.Moises
         Processed,
         Failed,
         Downloading,
+        Downloaded,
         Complete,
     }
 }

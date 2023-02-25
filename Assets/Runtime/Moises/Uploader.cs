@@ -9,7 +9,6 @@ namespace UnlimitedKaraoke.Runtime.Moises
     public class Uploader
     {
         public bool Busy { get; private set; }
-
         private readonly string apiKey;
         
         public Uploader(string apiKey)

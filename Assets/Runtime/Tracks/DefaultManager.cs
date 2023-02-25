@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
-using UnityEngine;
 using Zenject;
 
 namespace UnlimitedKaraoke.Runtime.Tracks
@@ -24,6 +23,8 @@ namespace UnlimitedKaraoke.Runtime.Tracks
 
         public DefaultManager(Settings.IManager settings, Moises.IManager moises)
         {
+            this.moises = moises;
+
             serializer = new JsonSerializer
             {
                 TypeNameHandling = TypeNameHandling.Auto,
@@ -32,7 +33,6 @@ namespace UnlimitedKaraoke.Runtime.Tracks
             Tracks = tracks.AsReadOnly();
             settings.OnSettingsUpdated += SettingsUpdated;
             SettingsUpdated(settings);
-            this.moises = moises;
             moises.OnJobUpdate += OnMoisesJobUpdated;
         }
         
@@ -42,8 +42,13 @@ namespace UnlimitedKaraoke.Runtime.Tracks
             OnTracksUpdated?.Invoke(Tracks);
             foreach (var track in tracks)
             {
-                track.MoisesJob ??= moises.AddTrack(track);
-                tracksForJobs.Add(track.MoisesJob, track);
+
+                if (track.State == TrackState.Processing && track.MoisesJob == null)
+                {
+                    track.State = TrackState.Processing;
+                    track.MoisesJob = moises.AddTrack(track);
+                    tracksForJobs.Add(track.MoisesJob, track);
+                }
             }
             listUpdated = false;
         }        
@@ -54,9 +59,6 @@ namespace UnlimitedKaraoke.Runtime.Tracks
             tracks.Clear();
             foreach (var directory in Directory.GetDirectories(settings.DataDirectory))
             {
-#if UNITY_EDITOR
-                UnityEngine.Debug.Log($"Checking {directory}");
-#endif
                 var trackPath = Path.Join(directory, TrackDataFile);
                 if (!File.Exists(trackPath)) continue;
 
@@ -70,11 +72,11 @@ namespace UnlimitedKaraoke.Runtime.Tracks
 
                 if (trackData == null) continue;
                 tracks.Add(trackData);
-                if (trackData.MoisesJob != null)
-                {
-                    moises.AddExistingJob(trackData, trackData.MoisesJob);
-                    tracksForJobs.Add(trackData.MoisesJob, trackData);
-                }
+                if (trackData.State == TrackState.Ready) continue;
+                if (trackData.MoisesJob == null) continue;
+
+                moises.AddExistingJob(trackData, trackData.MoisesJob);
+                tracksForJobs.Add(trackData.MoisesJob, trackData);
             }
             currentDataPath = settings.DataDirectory;
             listUpdated = true;
@@ -101,6 +103,7 @@ namespace UnlimitedKaraoke.Runtime.Tracks
                 Id = System.Guid.NewGuid(),
                 Name = name,
                 SourcePath = sourcePath,
+                State = TrackState.Processing,
             };
 
             Update(trackData);
@@ -130,7 +133,7 @@ namespace UnlimitedKaraoke.Runtime.Tracks
 
         private void Update(DefaultTrack trackData)
         {
-            string dirPath = Path.Join(currentDataPath, trackData.Id.ToString());
+            string dirPath = TrackDirectory(trackData);
             if (!Directory.Exists(dirPath)) Directory.CreateDirectory(dirPath);
             var tempPath = Path.Join(
                 UnityEngine.Application.temporaryCachePath, 
@@ -149,11 +152,37 @@ namespace UnlimitedKaraoke.Runtime.Tracks
         {
             if (!tracksForJobs.TryGetValue(job, out var trackData))
             {
-                Debug.LogError($"No track data found for job: {job}");
+                UnityEngine.Debug.LogError($"No track data found for job: {job}");
                 return;
             }
 
+            if (job.State == Moises.JobState.Complete)
+            {
+                var trackDirectory = TrackDirectory(trackData);
+                if (job.VocalResultPath != null)
+                {
+                    var audioPath = Path.Join(trackDirectory, "vocals.wav");
+                    File.Move(job.VocalResultPath, audioPath);
+                    trackData.VocalPath = "vocals.wav";
+                }
+                if (job.AccompanimentResultPath != null)
+                {
+                    var audioPath = Path.Join(trackDirectory, "music.wav");
+                    File.Move(job.AccompanimentResultPath, audioPath);
+                    trackData.MusicPath = "music.wav";
+                }
+                
+                trackData.State = TrackState.Ready;
+                trackData.MoisesJob = null;
+            }
+
             Update(trackData);
+            if (job.State == Moises.JobState.Complete) moises.RemoveJob(job).Forget();
+        }
+
+        private string TrackDirectory(DefaultTrack trackData)
+        {
+            return Path.Join(currentDataPath, trackData.Id.ToString());
         }
         
     }

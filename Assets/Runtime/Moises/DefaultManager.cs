@@ -2,14 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Cysharp.Threading.Tasks;
+using JetBrains.Annotations;
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Networking;
-using UnlimitedKaraoke.Runtime.Tracks;
 using Zenject;
 
 namespace UnlimitedKaraoke.Runtime.Moises
 {
+    [UsedImplicitly]
     public class DefaultManager : IManager, ITickable
     {
         public const string MoisesBaseUrl = "https://developer-api.moises.ai";
@@ -19,9 +20,10 @@ namespace UnlimitedKaraoke.Runtime.Moises
         public event Action<IReadOnlyList<IJob>> OnJobsUpdate;
 
         private Uploader uploader;
+        private Downloader downloader;
         private readonly List<DefaultJob> jobs = new();
         private readonly Queue<DefaultJob> updatedJobs = new();
-        private readonly Dictionary<ITrack, DefaultJob> jobsForTrack = new();
+        private readonly Dictionary<Tracks.ITrack, DefaultJob> jobsForTrack = new();
         private bool asyncBusy;
         private string moisesKey;
 
@@ -36,7 +38,8 @@ namespace UnlimitedKaraoke.Runtime.Moises
         {
             if (settings.MoisesKey == moisesKey) return;
             moisesKey = settings.MoisesKey;
-            uploader = new Uploader(moisesKey); 
+            uploader = new Uploader(moisesKey);
+            downloader = new Downloader(moisesKey);
         }
 
         public void Tick()
@@ -63,14 +66,29 @@ namespace UnlimitedKaraoke.Runtime.Moises
                     case JobState.Processing:
                         checkProcessing = true;
                         break;
+                    case JobState.Processed:
+                        if (job.Results == null)
+                        {
+                            job.State = JobState.Processing;
+                            checkProcessing = true;
+                            break;
+                        }
+                        if (downloader.Busy) continue;
+                        downloader.Start(job).Forget();
+                        break;
+                    case JobState.Downloaded:
+                        job.State = JobState.Complete;
+                        updatedJobs.Enqueue(job);
+                        break;
                 }
             }
+
+            if (checkProcessing) RefreshJobStatus().Forget();
         }
-        
-        public IJob AddTrack(ITrack track)
+
+        public IJob AddTrack(Tracks.ITrack track)
         {
-            DefaultJob job;
-            if (jobsForTrack.TryGetValue(track, out job))
+            if (jobsForTrack.TryGetValue(track, out var job))
             {
                 Debug.LogError($"Job exists for track {track}");
                 return job;
@@ -89,12 +107,12 @@ namespace UnlimitedKaraoke.Runtime.Moises
             return job;
         }
 
-        public IJob JobFor(ITrack track)
+        public IJob JobFor(Tracks.ITrack track)
         {
             return jobsForTrack.TryGetValue(track, out var job) ? job : null;
         }
 
-        public void AddExistingJob(ITrack track, IJob job)
+        public void AddExistingJob(Tracks.ITrack track, IJob job)
         {
             if (jobsForTrack.ContainsKey(track))
             {
@@ -107,13 +125,18 @@ namespace UnlimitedKaraoke.Runtime.Moises
             jobs.Add(realJob);
         }
 
+        public async UniTaskVoid RemoveJob(IJob job)
+        {
+            await UniTask.Delay(100);
+        }
+
         private async UniTaskVoid Process(DefaultJob job)
         {
             job.State = JobState.Processing;
 
             var requestPayload = new Requests.CreateJob
             {
-                Name = job.Name,
+                Name = $"UK: {job.Name}",
                 Params =
                 {
                     InputUrl = job.SourceUrl,
@@ -141,6 +164,47 @@ namespace UnlimitedKaraoke.Runtime.Moises
 
             job.Id = response.JobId;
             updatedJobs.Enqueue(job);
+        }
+
+        private async UniTaskVoid RefreshJobStatus()
+        {
+            if (asyncBusy) return;
+            asyncBusy = true;
+
+            string url = MoisesBaseUrl + "/api/job";
+            using UnityWebRequest statusRequest = new UnityWebRequest(url, "GET");
+            statusRequest.SetRequestHeader("Authorization", moisesKey);
+            statusRequest.SetRequestHeader("content-type", "application/json; charset=utf-8");
+            statusRequest.downloadHandler = new DownloadHandlerBuffer();
+            await statusRequest.SendWebRequest();
+
+            if (statusRequest.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogError($"web request error! {statusRequest.error}");
+                return;
+            }
+
+            string responseString = Encoding.UTF8.GetString(statusRequest.downloadHandler.data);
+            var jsonJobs = JsonConvert.DeserializeObject<Responses.Job[]>(responseString);
+
+            foreach (var jsonJob in jsonJobs)
+            {
+                var job = jobs.Find((x) => x.Id == jsonJob.Id);
+                if (job == null) continue;
+                switch (jsonJob.JobStatus)
+                {
+                    case Responses.JobStatus.Failed:
+                        job.State = JobState.Failed;
+                        updatedJobs.Enqueue(job);
+                        break;
+                    case Responses.JobStatus.Succeeded:
+                        job.State = JobState.Processed;
+                        job.Results = jsonJob.Results;
+                        updatedJobs.Enqueue(job);
+                        break;
+                }
+            }
+            asyncBusy = false;
         }
     }
 }

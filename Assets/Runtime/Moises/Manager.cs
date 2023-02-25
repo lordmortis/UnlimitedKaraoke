@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 
 namespace UnlimitedKaraoke.Runtime.Moises
 {
@@ -11,5 +12,6 @@ namespace UnlimitedKaraoke.Runtime.Moises
         IJob AddTrack(Tracks.ITrack track);
         IJob JobFor(Tracks.ITrack track);
         void AddExistingJob(Tracks.ITrack track, IJob job);
+        UniTaskVoid RemoveJob(IJob job);
     }
 }
