@@ -93,7 +93,20 @@ namespace UnlimitedKaraoke.Runtime.Moises
         {
             return jobsForTrack.TryGetValue(track, out var job) ? job : null;
         }
-        
+
+        public void AddExistingJob(ITrack track, IJob job)
+        {
+            if (jobsForTrack.ContainsKey(track))
+            {
+                Debug.LogError($"already have a job for track: {track}");
+                return;
+            }
+
+            if (job is not DefaultJob realJob) return;
+            jobsForTrack[track] = realJob;
+            jobs.Add(realJob);
+        }
+
         private async UniTaskVoid Process(DefaultJob job)
         {
             job.State = JobState.Processing;

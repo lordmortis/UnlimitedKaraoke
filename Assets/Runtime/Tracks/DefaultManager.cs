@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
+using UnityEngine;
 using Zenject;
-
 
 namespace UnlimitedKaraoke.Runtime.Tracks
 {
@@ -14,9 +14,10 @@ namespace UnlimitedKaraoke.Runtime.Tracks
         public event System.Action<IReadOnlyList<ITrack>> OnTracksUpdated;
 
         public IReadOnlyList<ITrack> Tracks { get; private set; }
-
+        
         private string currentDataPath = null;
-        private readonly List<DefaultTrack> tracks = new(); 
+        private readonly List<DefaultTrack> tracks = new();
+        private readonly Dictionary<Moises.IJob, DefaultTrack> tracksForJobs = new();
         private readonly JsonSerializer serializer;
         private bool listUpdated;
         private readonly Moises.IManager moises;
@@ -32,13 +33,18 @@ namespace UnlimitedKaraoke.Runtime.Tracks
             settings.OnSettingsUpdated += SettingsUpdated;
             SettingsUpdated(settings);
             this.moises = moises;
+            moises.OnJobUpdate += OnMoisesJobUpdated;
         }
-
+        
         public void Tick()
         {
             if (!listUpdated) return;
             OnTracksUpdated?.Invoke(Tracks);
-            foreach (var track in tracks) track.MoisesJob ??= moises.AddTrack(track);
+            foreach (var track in tracks)
+            {
+                track.MoisesJob ??= moises.AddTrack(track);
+                tracksForJobs.Add(track.MoisesJob, track);
+            }
             listUpdated = false;
         }        
         
@@ -64,6 +70,11 @@ namespace UnlimitedKaraoke.Runtime.Tracks
 
                 if (trackData == null) continue;
                 tracks.Add(trackData);
+                if (trackData.MoisesJob != null)
+                {
+                    moises.AddExistingJob(trackData, trackData.MoisesJob);
+                    tracksForJobs.Add(trackData.MoisesJob, trackData);
+                }
             }
             currentDataPath = settings.DataDirectory;
             listUpdated = true;
@@ -133,5 +144,17 @@ namespace UnlimitedKaraoke.Runtime.Tracks
             File.Delete(dataPath);
             File.Move(tempPath, dataPath);
         }
+        
+        private void OnMoisesJobUpdated(Moises.IJob job)
+        {
+            if (!tracksForJobs.TryGetValue(job, out var trackData))
+            {
+                Debug.LogError($"No track data found for job: {job}");
+                return;
+            }
+
+            Update(trackData);
+        }
+        
     }
 }

@@ -10,5 +10,6 @@ namespace UnlimitedKaraoke.Runtime.Moises
 
         IJob AddTrack(Tracks.ITrack track);
         IJob JobFor(Tracks.ITrack track);
+        void AddExistingJob(Tracks.ITrack track, IJob job);
     }
 }
