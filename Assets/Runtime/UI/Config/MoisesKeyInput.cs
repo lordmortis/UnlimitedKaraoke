@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 namespace UnlimitedKaraoke.Runtime.UI.Config
 {
@@ -10,7 +9,7 @@ namespace UnlimitedKaraoke.Runtime.UI.Config
 
         private Settings.IManager settings;
         private string currentValue;
-        
+
         [Zenject.Inject]
         public void InjectDependencies(Settings.IManager settings)
         {
