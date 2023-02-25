@@ -74,7 +74,7 @@ namespace UnlimitedKaraoke.Runtime.Settings
             {
                 serializer.Serialize(jsonStream, currentConfig);
             }
-
+            
             File.Delete(preferencesPath);
             File.Move(tempPath, preferencesPath);
         }
